@@ -209,7 +209,10 @@ where
     JoinerEvent: From<FetcherRequest<T>>,
 {
     loop {
-        let mut new_peer_list = ctx.effect_builder.get_fully_connected_peers().await;
+        let mut new_peer_list = ctx
+            .effect_builder
+            .get_fully_connected_non_joiner_peers()
+            .await;
         ctx.filter_bad_peers(&mut new_peer_list);
 
         for peer in new_peer_list {
@@ -518,7 +521,10 @@ where
     // fetch the data.
     let mut peers = vec![];
     for _ in 0..ctx.config.max_retries_while_not_connected() {
-        peers = ctx.effect_builder.get_fully_connected_peers().await;
+        peers = ctx
+            .effect_builder
+            .get_fully_connected_non_joiner_peers()
+            .await;
         if !peers.is_empty() {
             break;
         }
@@ -703,7 +709,7 @@ async fn sync_trie_store(state_root_hash: Digest, ctx: &ChainSyncContext<'_>) ->
     let peer_count = cmp::max(
         1,
         ctx.effect_builder
-            .get_fully_connected_peers()
+            .get_fully_connected_non_joiner_peers()
             .await
             .len()
             .saturating_sub(
@@ -1346,7 +1352,7 @@ async fn execute_blocks(
             let mut success = false;
             for peer in ctx
                 .effect_builder
-                .get_fully_connected_peers()
+                .get_fully_connected_non_joiner_peers()
                 .await
                 .into_iter()
                 .take(APPROVAL_FETCH_RETRIES)
@@ -1436,7 +1442,7 @@ async fn fetch_and_store_deploys(
     let peer_count = cmp::max(
         1,
         ctx.effect_builder
-            .get_fully_connected_peers()
+            .get_fully_connected_non_joiner_peers()
             .await
             .len()
             .saturating_sub(
